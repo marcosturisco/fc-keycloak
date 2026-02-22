@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["npm", "run", "authorization-code"]
+CMD ["npm", "run", "resource-owner"]

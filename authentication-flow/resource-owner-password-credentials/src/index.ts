@@ -1,6 +1,19 @@
 import express from "express";
 import session from "express-session";
 
+/* ================================
+   🔥 NOVO: Imports necessários para ESM
+================================ */
+import { fileURLToPath } from "url";      // 🔥 NOVO
+import { dirname } from "path";           // 🔥 NOVO
+import path from "path";                  // 🔥 NOVO
+
+/* ================================
+   🔥 NOVO: Simulação do __dirname no ESM
+================================ */
+const __filename = fileURLToPath(import.meta.url); // 🔥 NOVO
+const __dirname = dirname(__filename);             // 🔥 NOVO
+
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 
@@ -12,7 +25,6 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: memoryStore,
-    //expires
   })
 );
 
@@ -33,7 +45,11 @@ app.get("/login", (req, res) => {
   if (req.session.user) {
     return res.redirect("/admin");
   }
-  res.sendFile(__dirname + "/login.html");
+
+  /* ================================
+     🔥 ALTERADO: uso correto do path.join
+  ================================= */
+  res.sendFile(path.join(__dirname, "login.html")); // 🔥 ALTERADO
 });
 
 app.post("/login", async (req, res) => {
@@ -58,6 +74,7 @@ app.post("/login", async (req, res) => {
 
   const result = await response.json();
   console.log(result);
+
   //@ts-expect-error - type mismatch
   req.session.user = result;
   req.session.save();
@@ -66,18 +83,6 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/logout", async (req, res) => {
-  // const logoutParams = new URLSearchParams({
-  //   //client_id: "fullcycle-client",
-  //   //@ts-expect-error
-  //   id_token_hint: req.session.user.id_token,
-  //   post_logout_redirect_uri: "http://localhost:3000/login",
-  // });
-
-  // req.session.destroy((err) => {
-  //   console.error(err);
-  // });
-
-  // const url = `http://localhost:8080/realms/fullcycle-realm/protocol/openid-connect/logout?${logoutParams.toString()}`;
   await fetch(
     "http://host.docker.internal:8080/realms/fullcycle-realm/protocol/openid-connect/revoke",
     {
@@ -92,10 +97,11 @@ app.get("/logout", async (req, res) => {
       }).toString(),
     }
   );
-  //response.ok verificar se a resposta está ok
+
   req.session.destroy((err) => {
     console.error(err);
   });
+
   res.redirect("/login");
 });
 
